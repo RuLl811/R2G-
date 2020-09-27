@@ -1,0 +1,56 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# R2G
+
+data = pd.read_excel('SPY.xlsx').sort_values("timestamp")
+data.set_index("timestamp", inplace=True)
+data['factor'] = data.adjusted_close / data.close
+cols = [data.open * data.factor, data.high * data.factor, data.low * data.factor, data.adjusted_close,
+        data.volume]
+df = pd.concat(cols, axis=1)
+df.columns = ["Open", "High", "Low", "Close", "Volume"]
+
+df['GAP'] = (df.Open / df.Close.shift() - 1) * 100
+df['Cierre'] = (df.Close / df.Close.shift() - 1) * 100
+df = df.dropna().round(2)
+
+df['G_P'] = df.eval('GAP > 0')
+df['G_N'] = df.eval('GAP < 0')
+df['G_Neu'] = df.eval('GAP == 0')
+df['I_P'] = df.eval('Cierre > 0')
+df['I_N'] = df.eval('Cierre < 0')
+df['I_Neu'] = df.eval('Cierre == 0')
+
+dfGr = df.groupby(["G_P", "G_N", "G_Neu", "I_P", "I_N", "I_Neu"])
+dfGr = dfGr.GAP.count().to_frame()
+dfGr.columns = ["Cant"]
+print(dfGr)
+q = list(dfGr.Cant)
+
+# Armado de grafico
+colors = ["red", "green"]
+subcolors = ["pink", "lightgreen", "pink", "lightgreen"]
+labels = ["GAP Negativo\n" + str(sum(q[4:6])), "GAP Positivo\n" + str(sum(q[7:9]))]
+
+p = []
+p.append(round(q[4] / (q[4] + q[5]), 2) * 100)
+p.append(round(q[5] / (q[4] + q[5]), 2) * 100)
+p.append(round(q[7] / (q[7] + q[8]), 1) * 100)
+p.append(round(q[8] / (q[7] + q[8]), 2) * 100)
+
+sublabels = ["Gap-\nClose-\n" + str(q[4]) + '\n' + str(p[0]) + '%',
+             "Gap-\nClose+\n" + str(q[5]) + '\n' + str(p[1]) + '%',
+             "Gap+\nClose-\n" + str(q[7]) + '\n' + str(p[2]) + '%',
+             "Gap+\nClose+\n" + str(q[8]) + '\n' + str(p[3]) + '%']
+
+fig1, ax = plt.subplots(figsize=(5, 5))
+
+externo, _ = ax.pie([sum(q[3:6]), sum(q[6:9])], radius=1.2, labels=labels, colors=colors, labeldistance=1.1)
+plt.setp(externo, width=0.3, edgecolor='white')
+
+interno, _ = ax.pie(q[4:6]+q[7:9], radius=0.9, labels=sublabels, colors=subcolors, labeldistance=0.5)
+plt.setp(interno, width=0.2, edgecolor='white')
+
+plt.legend(title="R2G", title_fontsize=14, bbox_to_anchor=[1.1, 0.9], ncol=3, fontsize=12, markerscale=2)
+plt.show()
