@@ -52,5 +52,5 @@ plt.setp(externo, width=0.3, edgecolor='white')
 interno, _ = ax.pie(q[4:6]+q[7:9], radius=0.9, labels=sublabels, colors=subcolors, labeldistance=0.5)
 plt.setp(interno, width=0.2, edgecolor='white')
 
-plt.legend(title="R2G", title_fontsize=14, bbox_to_anchor=[1.1, 0.9], ncol=3, fontsize=12, markerscale=2)
+plt.legend(title="R2G", title_fontsize=10, bbox_to_anchor=[1, 0.6], ncol=3, fontsize=9, markerscale=2)
 plt.show()
